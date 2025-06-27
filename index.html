@@ -5,14 +5,15 @@
   <title>LMod Workshop</title>
   <style>
     body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background-color: #1b1b1b;
+      font-family: sans-serif;
+      background-color: #111;
       color: #fff;
+      margin: 0;
+      padding: 0;
     }
 
     header {
-      background-color: #111;
+      background: #222;
       padding: 20px;
       text-align: center;
     }
@@ -22,7 +23,24 @@
       font-size: 36px;
     }
 
-    .container {
+    #uploadForm {
+      background: #1c1c1c;
+      padding: 20px;
+      text-align: center;
+    }
+
+    #uploadForm input, #uploadForm label {
+      margin: 10px;
+      display: block;
+      font-size: 16px;
+    }
+
+    #uploadForm input[type="text"] {
+      padding: 5px;
+      width: 300px;
+    }
+
+    .workshop-container {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
@@ -30,68 +48,49 @@
       gap: 20px;
     }
 
-    .mod-card {
-      background-color: #2a2a2a;
-      width: 300px;
+    .mod-box {
+      background: #222;
+      border: 1px solid #444;
       border-radius: 10px;
+      width: 400px;
+      box-shadow: 0 0 10px #000;
       overflow: hidden;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.4);
-      transition: transform 0.2s;
     }
 
-    .mod-card:hover {
-      transform: scale(1.05);
-    }
-
-    .mod-card img {
+    .mod-image {
       width: 100%;
       height: 200px;
-      object-fit: cover;
+      background-size: cover;
+      background-position: center;
+      border-bottom: 1px solid #444;
     }
 
     .mod-info {
       padding: 15px;
     }
 
-    .mod-info h2 {
-      margin-top: 0;
-      margin-bottom: 10px;
-      font-size: 22px;
+    .mod-title {
+      font-size: 20px;
+      margin-bottom: 5px;
     }
 
-    .mod-info p {
-      margin: 0 0 10px;
-      font-size: 14px;
-      color: #ccc;
-    }
-
-    .mod-buttons {
-      display: flex;
-      justify-content: space-between;
-    }
-
-    .mod-buttons a {
-      display: inline-block;
-      padding: 8px 12px;
-      background-color: #4CAF50;
-      color: white;
-      text-decoration: none;
-      border-radius: 5px;
-      font-size: 14px;
-      transition: background-color 0.2s;
-    }
-
-    .mod-buttons a:hover {
-      background-color: #45a049;
-    }
-
-    footer {
-      background-color: #111;
-      text-align: center;
-      padding: 15px;
+    .mod-author {
       font-size: 14px;
       color: #aaa;
-      margin-top: 30px;
+      margin-bottom: 10px;
+    }
+
+    .subscribe-btn {
+      background: #4CAF50;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .subscribe-btn:hover {
+      background: #45a049;
     }
   </style>
 </head>
@@ -99,44 +98,74 @@
 
 <header>
   <h1>LMod Workshop</h1>
-  <p>Przeglądaj i pobieraj dodatki do LMod!</p>
 </header>
 
-<div class="container">
-
-  <!-- MOD 1 -->
-  <div class="mod-card">
-    <img src="https://via.placeholder.com/300x200?text=Mod+1" alt="Mod 1">
-    <div class="mod-info">
-      <h2>Super Narzędzie</h2>
-      <p>Dodaje laserowy nożyk do LMod! Idealny do przecinania obiektów.</p>
-      <div class="mod-buttons">
-        <a href="mods/super-narzedzie.lmod" download>Pobierz</a>
-        <a href="https://github.com/lemontech/lmod-super-narzedzie" target="_blank">Zobacz</a>
-      </div>
-    </div>
-  </div>
-
-  <!-- MOD 2 -->
-  <div class="mod-card">
-    <img src="https://via.placeholder.com/300x200?text=Mod+2" alt="Mod 2">
-    <div class="mod-info">
-      <h2>Mapa Testowa</h2>
-      <p>Świetna arena do testowania fizyki. Obiekty, rampy i więcej.</p>
-      <div class="mod-buttons">
-        <a href="mods/mapa-testowa.lmod" download>Pobierz</a>
-        <a href="https://github.com/lemontech/lmod-mapa" target="_blank">Zobacz</a>
-      </div>
-    </div>
-  </div>
-
-  <!-- Dodaj więcej MODÓW tutaj -->
-
+<!-- Upload form -->
+<div id="uploadForm">
+  <h2>Dodaj moda</h2>
+  <label>Nazwa moda: <input type="text" id="modName"></label>
+  <label>Autor: <input type="text" id="modAuthor" value="LEMONTECH"></label>
+  <label>Plik .json: <input type="file" id="modFile" accept=".json"></label>
+  <label>Obrazek (.png): <input type="file" id="modImage" accept="image/png"></label>
+  <button onclick="uploadMod()">Dodaj do Workshopu</button>
 </div>
 
-<footer>
-  &copy; 2025 LEMONTECH. Stworzone dla społeczności LMod.
-</footer>
+<!-- Workshop section -->
+<div class="workshop-container" id="workshopList"></div>
+
+<script>
+function uploadMod() {
+  const name = document.getElementById("modName").value;
+  const author = document.getElementById("modAuthor").value;
+  const file = document.getElementById("modFile").files[0];
+  const image = document.getElementById("modImage").files[0];
+
+  if (!name || !author || !file || !image) {
+    alert("Wypełnij wszystkie pola i wybierz pliki!");
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const imageUrl = e.target.result;
+
+    const container = document.getElementById("workshopList");
+
+    const modBox = document.createElement("div");
+    modBox.className = "mod-box";
+
+    const imageDiv = document.createElement("div");
+    imageDiv.className = "mod-image";
+    imageDiv.style.backgroundImage = `url(${imageUrl})`;
+
+    const infoDiv = document.createElement("div");
+    infoDiv.className = "mod-info";
+
+    const title = document.createElement("div");
+    title.className = "mod-title";
+    title.textContent = name;
+
+    const authorText = document.createElement("div");
+    authorText.className = "mod-author";
+    authorText.textContent = "author: " + author;
+
+    const btn = document.createElement("button");
+    btn.className = "subscribe-btn";
+    btn.textContent = "Subscrabe";
+
+    infoDiv.appendChild(title);
+    infoDiv.appendChild(authorText);
+    infoDiv.appendChild(btn);
+
+    modBox.appendChild(imageDiv);
+    modBox.appendChild(infoDiv);
+
+    container.appendChild(modBox);
+  };
+
+  reader.readAsDataURL(image); // wczytuje obraz jako base64 (do podglądu)
+}
+</script>
 
 </body>
 </html>
