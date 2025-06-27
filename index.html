@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pl">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>LMod Workshop</title>
@@ -98,73 +98,119 @@
 
 <header>
   <h1>LMod Workshop</h1>
+  <p>Upload and browse custom content for LMod</p>
 </header>
 
 <!-- Upload form -->
 <div id="uploadForm">
-  <h2>Dodaj moda</h2>
-  <label>Nazwa moda: <input type="text" id="modName"></label>
-  <label>Autor: <input type="text" id="modAuthor" value="LEMONTECH"></label>
-  <label>Plik .json: <input type="file" id="modFile" accept=".json"></label>
-  <label>Obrazek (.png): <input type="file" id="modImage" accept="image/png"></label>
-  <button onclick="uploadMod()">Dodaj do Workshopu</button>
+  <h2>Upload a Mod</h2>
+  <label>Mod Name: <input type="text" id="modName"></label>
+  <label>Author: <input type="text" id="modAuthor" value="LEMONTECH"></label>
+  <label>.json File: <input type="file" id="modFile" accept=".json"></label>
+  <label>Preview Image (.png): <input type="file" id="modImage" accept="image/png"></label>
+  <button onclick="uploadMod()">Add to Workshop</button>
 </div>
 
 <!-- Workshop section -->
 <div class="workshop-container" id="workshopList"></div>
 
 <script>
+let mods = [];
+
+function saveMods() {
+  localStorage.setItem("lmodMods", JSON.stringify(mods));
+}
+
+function loadMods() {
+  const saved = localStorage.getItem("lmodMods");
+  if (saved) {
+    mods = JSON.parse(saved);
+    mods.forEach(renderMod);
+  }
+}
+
 function uploadMod() {
   const name = document.getElementById("modName").value;
   const author = document.getElementById("modAuthor").value;
-  const file = document.getElementById("modFile").files[0];
-  const image = document.getElementById("modImage").files[0];
+  const jsonFile = document.getElementById("modFile").files[0];
+  const imageFile = document.getElementById("modImage").files[0];
 
-  if (!name || !author || !file || !image) {
-    alert("Wypełnij wszystkie pola i wybierz pliki!");
+  if (!name || !author || !jsonFile || !imageFile) {
+    alert("Please fill in all fields and select files.");
     return;
   }
 
-  const reader = new FileReader();
-  reader.onload = function(e) {
+  const readerImg = new FileReader();
+  const readerJSON = new FileReader();
+
+  readerImg.onload = function(e) {
     const imageUrl = e.target.result;
 
-    const container = document.getElementById("workshopList");
+    readerJSON.onload = function(ev) {
+      const jsonData = ev.target.result;
 
-    const modBox = document.createElement("div");
-    modBox.className = "mod-box";
+      const modData = {
+        name,
+        author,
+        imageUrl,
+        jsonContent: jsonData,
+        jsonFileName: jsonFile.name
+      };
 
-    const imageDiv = document.createElement("div");
-    imageDiv.className = "mod-image";
-    imageDiv.style.backgroundImage = `url(${imageUrl})`;
+      mods.push(modData);
+      saveMods();
+      renderMod(modData);
+    };
 
-    const infoDiv = document.createElement("div");
-    infoDiv.className = "mod-info";
-
-    const title = document.createElement("div");
-    title.className = "mod-title";
-    title.textContent = name;
-
-    const authorText = document.createElement("div");
-    authorText.className = "mod-author";
-    authorText.textContent = "author: " + author;
-
-    const btn = document.createElement("button");
-    btn.className = "subscribe-btn";
-    btn.textContent = "Subscrabe";
-
-    infoDiv.appendChild(title);
-    infoDiv.appendChild(authorText);
-    infoDiv.appendChild(btn);
-
-    modBox.appendChild(imageDiv);
-    modBox.appendChild(infoDiv);
-
-    container.appendChild(modBox);
+    readerJSON.readAsText(jsonFile);
   };
 
-  reader.readAsDataURL(image); // wczytuje obraz jako base64 (do podglądu)
+  readerImg.readAsDataURL(imageFile);
 }
+
+function renderMod(mod) {
+  const container = document.getElementById("workshopList");
+
+  const modBox = document.createElement("div");
+  modBox.className = "mod-box";
+
+  const imageDiv = document.createElement("div");
+  imageDiv.className = "mod-image";
+  imageDiv.style.backgroundImage = `url(${mod.imageUrl})`;
+
+  const infoDiv = document.createElement("div");
+  infoDiv.className = "mod-info";
+
+  const title = document.createElement("div");
+  title.className = "mod-title";
+  title.textContent = mod.name;
+
+  const authorText = document.createElement("div");
+  authorText.className = "mod-author";
+  authorText.textContent = "Author: " + mod.author;
+
+  const btn = document.createElement("button");
+  btn.className = "subscribe-btn";
+  btn.textContent = "Subscribe";
+  btn.onclick = () => {
+    const blob = new Blob([mod.jsonContent], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = mod.jsonFileName || "mod.json";
+    a.click();
+  };
+
+  infoDiv.appendChild(title);
+  infoDiv.appendChild(authorText);
+  infoDiv.appendChild(btn);
+
+  modBox.appendChild(imageDiv);
+  modBox.appendChild(infoDiv);
+
+  container.appendChild(modBox);
+}
+
+loadMods();
 </script>
 
 </body>
