@@ -181,7 +181,7 @@ function uploadMod() {
       const jsonData = ev.target.result;
 
       const modData = {
-        id: Date.now() + Math.random().toString(36).slice(2), // unikalny ID
+        id: Date.now() + Math.random().toString(36).slice(2),
         name,
         author,
         imageUrl,
@@ -193,7 +193,7 @@ function uploadMod() {
       saveMods();
       renderMod(modData);
 
-      // Wyczyść formularz
+      // Clear form fields
       document.getElementById("modName").value = "";
       document.getElementById("modAuthor").value = "LEMONTECH";
       document.getElementById("modFile").value = "";
@@ -209,8 +209,7 @@ function uploadMod() {
 function renderMod(mod) {
   const container = document.getElementById("workshopList");
 
-  // Sprawdź, czy mod już jest na stronie (np. po reloadzie)
-  if(document.getElementById(mod.id)) return;
+  if(document.getElementById(mod.id)) return; // Avoid duplicates
 
   const modBox = document.createElement("div");
   modBox.className = "mod-box";
