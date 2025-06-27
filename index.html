@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <title>Moja Gra - Strona</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #1a1a1a;
+      color: #fff;
+    }
+
+    header {
+      background-color: #333;
+      padding: 20px;
+      text-align: center;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 36px;
+    }
+
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      padding: 20px;
+      gap: 20px;
+    }
+
+    .card {
+      background-color: #2a2a2a;
+      width: 300px;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+      transition: transform 0.2s;
+    }
+
+    .card:hover {
+      transform: scale(1.05);
+    }
+
+    .card img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+    }
+
+    .card-content {
+      padding: 15px;
+    }
+
+    .card-content h2 {
+      margin-top: 0;
+      margin-bottom: 10px;
+      font-size: 24px;
+    }
+
+    .card-content p {
+      margin: 0;
+      font-size: 16px;
+      color: #ccc;
+    }
+
+    footer {
+      background-color: #222;
+      text-align: center;
+      padding: 15px;
+      font-size: 14px;
+      color: #aaa;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Moja Gra</h1>
+  <p>Oficjalna strona gry stworzonej przez LEMONTECH</p>
+</header>
+
+<div class="container">
+  <div class="card">
+    <img src="https://via.placeholder.com/300x200?text=Zrzut+ekranu+1" alt="Screenshot 1">
+    <div class="card-content">
+      <h2>Tryb Kampanii</h2>
+      <p>Ekscytująca przygoda z unikalnymi poziomami i fabułą!</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <img src="https://via.placeholder.com/300x200?text=Zrzut+ekranu+2" alt="Screenshot 2">
+    <div class="card-content">
+      <h2>Tryb Multiplayer</h2>
+      <p>Graj z przyjaciółmi w dynamicznych bitwach!</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <img src="https://via.placeholder.com/300x200?text=Zrzut+ekranu+3" alt="Screenshot 3">
+    <div class="card-content">
+      <h2>Edytor Poziomów</h2>
+      <p>Twórz własne poziomy i dziel się nimi z innymi!</p>
+    </div>
+  </div>
+</div>
+
+<footer>
+  &copy; 2025 LEMONTECH. Wszystkie prawa zastrzeżone.
+</footer>
+
+</body>
+</html>
