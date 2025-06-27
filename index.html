@@ -2,10 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>LMod Workshop (Online)</title>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"></script>
+  <title>LMod Workshop (GitHub)</title>
   <style>
     body {
       font-family: sans-serif;
@@ -22,20 +19,6 @@
     header h1 {
       margin: 0;
       font-size: 36px;
-    }
-    #uploadForm {
-      background: #1c1c1c;
-      padding: 20px;
-      text-align: center;
-    }
-    #uploadForm input, #uploadForm label {
-      margin: 10px;
-      display: block;
-      font-size: 16px;
-    }
-    #uploadForm input[type="text"] {
-      padding: 5px;
-      width: 300px;
     }
     .workshop-container {
       display: flex;
@@ -87,82 +70,76 @@
 <body>
 <header>
   <h1>LMod Workshop</h1>
-  <p>Upload and browse custom content for LMod</p>
+  <p>Browse and download community-made mods</p>
 </header>
-<div id="uploadForm">
-  <h2>Upload a Mod</h2>
-  <label>Mod Name: <input type="text" id="modName"></label>
-  <label>Author: <input type="text" id="modAuthor" value="LEMONTECH"></label>
-  <label>.json File: <input type="file" id="modFile" accept=".json"></label>
-  <label>Preview Image (.png): <input type="file" id="modImage" accept="image/png"></label>
-  <button onclick="uploadMod()">Add to Workshop</button>
-</div>
 <div class="workshop-container" id="workshopList"></div>
 <script>
-const firebaseConfig = {
-  apiKey: "TWÓJ_KLUCZ",
-  authDomain: "XXX.firebaseapp.com",
-  projectId: "XXX",
-  storageBucket: "XXX.appspot.com",
-  messagingSenderId: "XXX",
-  appId: "XXX"
-};
+const REPO = "LemontechStudios/lmod-workshop"; // <- zmień na swój repozytorium
+const BRANCH = "main";
 
-firebase.initializeApp(firebaseConfig);
-const storage = firebase.storage();
-const db = firebase.firestore();
-
-async function uploadMod() {
-  const name = document.getElementById("modName").value.trim();
-  const author = document.getElementById("modAuthor").value.trim();
-  const jsonFile = document.getElementById("modFile").files[0];
-  const imageFile = document.getElementById("modImage").files[0];
-
-  if (!name || !author || !jsonFile || !imageFile) {
-    alert("Fill in all fields.");
-    return;
-  }
-
-  const imageRef = storage.ref("mods/" + Date.now() + "_" + imageFile.name);
-  const jsonRef = storage.ref("mods/" + Date.now() + "_" + jsonFile.name);
-
-  const imageSnapshot = await imageRef.put(imageFile);
-  const jsonSnapshot = await jsonRef.put(jsonFile);
-
-  const imageUrl = await imageSnapshot.ref.getDownloadURL();
-  const jsonUrl = await jsonSnapshot.ref.getDownloadURL();
-
-  await db.collection("mods").add({ name, author, imageUrl, jsonUrl });
-  location.reload();
+async function fetchModsList() {
+  const apiUrl = `https://api.github.com/repos/${REPO}/contents/mods?ref=${BRANCH}`;
+  const res = await fetch(apiUrl);
+  const mods = await res.json();
+  return mods.filter(item => item.type === "dir");
 }
 
-async function loadMods() {
+async function fetchModData(modName) {
+  const baseUrl = `https://raw.githubusercontent.com/${REPO}/${BRANCH}/mods/${modName}`;
+  const authorUrl = `${baseUrl}/author.txt`;
+  const contentUrl = `${baseUrl}/content.json`;
+  const iconUrl = `${baseUrl}/icon.png`;
+
+  const [authorRes, contentRes] = await Promise.all([
+    fetch(authorUrl),
+    fetch(contentUrl)
+  ]);
+
+  const author = await authorRes.text();
+  const contentJson = await contentRes.text();
+
+  return {
+    name: modName,
+    author: author.trim(),
+    contentUrl,
+    iconUrl
+  };
+}
+
+function renderMod(mod) {
   const container = document.getElementById("workshopList");
-  const snapshot = await db.collection("mods").get();
-  snapshot.forEach(doc => {
-    const mod = doc.data();
-    const modBox = document.createElement("div");
-    modBox.className = "mod-box";
 
-    const imageDiv = document.createElement("div");
-    imageDiv.className = "mod-image";
-    imageDiv.style.backgroundImage = `url(${mod.imageUrl})`;
+  const modBox = document.createElement("div");
+  modBox.className = "mod-box";
 
-    const infoDiv = document.createElement("div");
-    infoDiv.className = "mod-info";
-    infoDiv.innerHTML = `
-      <div class="mod-title">${mod.name}</div>
-      <div class="mod-author">Author: ${mod.author}</div>
-      <button class="subscribe-btn" onclick="window.open('${mod.jsonUrl}', '_blank')">Subscribe</button>
-    `;
+  const imageDiv = document.createElement("div");
+  imageDiv.className = "mod-image";
+  imageDiv.style.backgroundImage = `url(${mod.iconUrl})`;
 
-    modBox.appendChild(imageDiv);
-    modBox.appendChild(infoDiv);
-    container.appendChild(modBox);
-  });
+  const infoDiv = document.createElement("div");
+  infoDiv.className = "mod-info";
+  infoDiv.innerHTML = `
+    <div class="mod-title">${mod.name}</div>
+    <div class="mod-author">Author: ${mod.author}</div>
+    <button class="subscribe-btn" onclick="window.open('${mod.contentUrl}', '_blank')">Subscribe</button>
+  `;
+
+  modBox.appendChild(imageDiv);
+  modBox.appendChild(infoDiv);
+  container.appendChild(modBox);
 }
 
-loadMods();
+(async () => {
+  const modDirs = await fetchModsList();
+  for (const dir of modDirs) {
+    try {
+      const modData = await fetchModData(dir.name);
+      renderMod(modData);
+    } catch (e) {
+      console.warn("Error loading mod:", dir.name, e);
+    }
+  }
+})();
 </script>
 </body>
 </html>
