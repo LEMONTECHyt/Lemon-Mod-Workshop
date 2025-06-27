@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>LMod Workshop</title>
+  <title>LMod Workshop (Online)</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"></script>
   <style>
     body {
       font-family: sans-serif;
@@ -11,35 +14,29 @@
       margin: 0;
       padding: 0;
     }
-
     header {
       background: #222;
       padding: 20px;
       text-align: center;
     }
-
     header h1 {
       margin: 0;
       font-size: 36px;
     }
-
     #uploadForm {
       background: #1c1c1c;
       padding: 20px;
       text-align: center;
     }
-
     #uploadForm input, #uploadForm label {
       margin: 10px;
       display: block;
       font-size: 16px;
     }
-
     #uploadForm input[type="text"] {
       padding: 5px;
       width: 300px;
     }
-
     .workshop-container {
       display: flex;
       flex-wrap: wrap;
@@ -47,7 +44,6 @@
       padding: 20px;
       gap: 20px;
     }
-
     .mod-box {
       background: #222;
       border: 1px solid #444;
@@ -55,9 +51,7 @@
       width: 400px;
       box-shadow: 0 0 10px #000;
       overflow: hidden;
-      position: relative;
     }
-
     .mod-image {
       width: 100%;
       height: 200px;
@@ -65,210 +59,110 @@
       background-position: center;
       border-bottom: 1px solid #444;
     }
-
     .mod-info {
       padding: 15px;
     }
-
     .mod-title {
       font-size: 20px;
       margin-bottom: 5px;
     }
-
     .mod-author {
       font-size: 14px;
       color: #aaa;
       margin-bottom: 10px;
     }
-
-    .subscribe-btn, .delete-btn {
+    .subscribe-btn {
       background: #4CAF50;
       color: white;
       border: none;
       padding: 8px 16px;
       border-radius: 5px;
       cursor: pointer;
-      margin-right: 10px;
-      font-weight: bold;
     }
-
     .subscribe-btn:hover {
       background: #45a049;
-    }
-
-    .delete-btn {
-      background: #e74c3c;
-    }
-
-    .delete-btn:hover {
-      background: #c0392b;
-    }
-
-    .btn-group {
-      display: flex;
-      justify-content: flex-start;
-      gap: 10px;
     }
   </style>
 </head>
 <body>
-
 <header>
   <h1>LMod Workshop</h1>
   <p>Upload and browse custom content for LMod</p>
 </header>
-
-<!-- Upload form -->
 <div id="uploadForm">
   <h2>Upload a Mod</h2>
-  <label>Mod Name: <input type="text" id="modName" /></label>
-  <label>Author: <input type="text" id="modAuthor" value="LEMONTECH" /></label>
-  <label>.json File: <input type="file" id="modFile" accept=".json" /></label>
-  <label>Preview Image (.png): <input type="file" id="modImage" accept="image/png" /></label>
+  <label>Mod Name: <input type="text" id="modName"></label>
+  <label>Author: <input type="text" id="modAuthor" value="LEMONTECH"></label>
+  <label>.json File: <input type="file" id="modFile" accept=".json"></label>
+  <label>Preview Image (.png): <input type="file" id="modImage" accept="image/png"></label>
   <button onclick="uploadMod()">Add to Workshop</button>
 </div>
-
-<!-- Workshop section -->
 <div class="workshop-container" id="workshopList"></div>
-
 <script>
-let mods = [];
+const firebaseConfig = {
+  apiKey: "TWÓJ_KLUCZ",
+  authDomain: "XXX.firebaseapp.com",
+  projectId: "XXX",
+  storageBucket: "XXX.appspot.com",
+  messagingSenderId: "XXX",
+  appId: "XXX"
+};
 
-function saveMods() {
-  try {
-    localStorage.setItem("lmodMods", JSON.stringify(mods));
-  } catch(e) {
-    console.error("Error saving mods to localStorage", e);
-  }
-}
+firebase.initializeApp(firebaseConfig);
+const storage = firebase.storage();
+const db = firebase.firestore();
 
-function loadMods() {
-  try {
-    const saved = localStorage.getItem("lmodMods");
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      if (Array.isArray(parsed)) {
-        mods = parsed;
-        mods.forEach(renderMod);
-      } else {
-        mods = [];
-      }
-    }
-  } catch (e) {
-    console.error("Error loading mods from localStorage", e);
-    mods = [];
-  }
-}
-
-function uploadMod() {
+async function uploadMod() {
   const name = document.getElementById("modName").value.trim();
   const author = document.getElementById("modAuthor").value.trim();
   const jsonFile = document.getElementById("modFile").files[0];
   const imageFile = document.getElementById("modImage").files[0];
 
   if (!name || !author || !jsonFile || !imageFile) {
-    alert("Please fill in all fields and select files.");
+    alert("Fill in all fields.");
     return;
   }
 
-  const readerImg = new FileReader();
-  const readerJSON = new FileReader();
+  const imageRef = storage.ref("mods/" + Date.now() + "_" + imageFile.name);
+  const jsonRef = storage.ref("mods/" + Date.now() + "_" + jsonFile.name);
 
-  readerImg.onload = function(e) {
-    const imageUrl = e.target.result;
+  const imageSnapshot = await imageRef.put(imageFile);
+  const jsonSnapshot = await jsonRef.put(jsonFile);
 
-    readerJSON.onload = function(ev) {
-      const jsonData = ev.target.result;
+  const imageUrl = await imageSnapshot.ref.getDownloadURL();
+  const jsonUrl = await jsonSnapshot.ref.getDownloadURL();
 
-      const modData = {
-        id: Date.now() + Math.random().toString(36).slice(2),
-        name,
-        author,
-        imageUrl,
-        jsonContent: jsonData,
-        jsonFileName: jsonFile.name
-      };
-
-      mods.push(modData);
-      saveMods();
-      renderMod(modData);
-
-      // Clear form fields
-      document.getElementById("modName").value = "";
-      document.getElementById("modAuthor").value = "LEMONTECH";
-      document.getElementById("modFile").value = "";
-      document.getElementById("modImage").value = "";
-    };
-
-    readerJSON.readAsText(jsonFile);
-  };
-
-  readerImg.readAsDataURL(imageFile);
+  await db.collection("mods").add({ name, author, imageUrl, jsonUrl });
+  location.reload();
 }
 
-function renderMod(mod) {
+async function loadMods() {
   const container = document.getElementById("workshopList");
+  const snapshot = await db.collection("mods").get();
+  snapshot.forEach(doc => {
+    const mod = doc.data();
+    const modBox = document.createElement("div");
+    modBox.className = "mod-box";
 
-  if(document.getElementById(mod.id)) return; // Avoid duplicates
+    const imageDiv = document.createElement("div");
+    imageDiv.className = "mod-image";
+    imageDiv.style.backgroundImage = `url(${mod.imageUrl})`;
 
-  const modBox = document.createElement("div");
-  modBox.className = "mod-box";
-  modBox.id = mod.id;
+    const infoDiv = document.createElement("div");
+    infoDiv.className = "mod-info";
+    infoDiv.innerHTML = `
+      <div class="mod-title">${mod.name}</div>
+      <div class="mod-author">Author: ${mod.author}</div>
+      <button class="subscribe-btn" onclick="window.open('${mod.jsonUrl}', '_blank')">Subscribe</button>
+    `;
 
-  const imageDiv = document.createElement("div");
-  imageDiv.className = "mod-image";
-  imageDiv.style.backgroundImage = `url(${mod.imageUrl})`;
-
-  const infoDiv = document.createElement("div");
-  infoDiv.className = "mod-info";
-
-  const title = document.createElement("div");
-  title.className = "mod-title";
-  title.textContent = mod.name;
-
-  const authorText = document.createElement("div");
-  authorText.className = "mod-author";
-  authorText.textContent = "Author: " + mod.author;
-
-  const btnSubscribe = document.createElement("button");
-  btnSubscribe.className = "subscribe-btn";
-  btnSubscribe.textContent = "Subscribe";
-  btnSubscribe.onclick = () => {
-    const blob = new Blob([mod.jsonContent], { type: "application/json" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = mod.jsonFileName || "mod.json";
-    a.click();
-  };
-
-  const btnDelete = document.createElement("button");
-  btnDelete.className = "delete-btn";
-  btnDelete.textContent = "Delete";
-  btnDelete.onclick = () => {
-    if (confirm(`Delete mod "${mod.name}"?`)) {
-      mods = mods.filter(m => m.id !== mod.id);
-      saveMods();
-      modBox.remove();
-    }
-  };
-
-  const btnGroup = document.createElement("div");
-  btnGroup.className = "btn-group";
-  btnGroup.appendChild(btnSubscribe);
-  btnGroup.appendChild(btnDelete);
-
-  infoDiv.appendChild(title);
-  infoDiv.appendChild(authorText);
-  infoDiv.appendChild(btnGroup);
-
-  modBox.appendChild(imageDiv);
-  modBox.appendChild(infoDiv);
-
-  container.appendChild(modBox);
+    modBox.appendChild(imageDiv);
+    modBox.appendChild(infoDiv);
+    container.appendChild(modBox);
+  });
 }
 
 loadMods();
 </script>
-
 </body>
 </html>
