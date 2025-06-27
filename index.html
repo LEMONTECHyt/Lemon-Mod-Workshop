@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>LMod Workshop</title>
   <style>
     body {
@@ -55,6 +55,7 @@
       width: 400px;
       box-shadow: 0 0 10px #000;
       overflow: hidden;
+      position: relative;
     }
 
     .mod-image {
@@ -80,17 +81,33 @@
       margin-bottom: 10px;
     }
 
-    .subscribe-btn {
+    .subscribe-btn, .delete-btn {
       background: #4CAF50;
       color: white;
       border: none;
       padding: 8px 16px;
       border-radius: 5px;
       cursor: pointer;
+      margin-right: 10px;
+      font-weight: bold;
     }
 
     .subscribe-btn:hover {
       background: #45a049;
+    }
+
+    .delete-btn {
+      background: #e74c3c;
+    }
+
+    .delete-btn:hover {
+      background: #c0392b;
+    }
+
+    .btn-group {
+      display: flex;
+      justify-content: flex-start;
+      gap: 10px;
     }
   </style>
 </head>
@@ -104,10 +121,10 @@
 <!-- Upload form -->
 <div id="uploadForm">
   <h2>Upload a Mod</h2>
-  <label>Mod Name: <input type="text" id="modName"></label>
-  <label>Author: <input type="text" id="modAuthor" value="LEMONTECH"></label>
-  <label>.json File: <input type="file" id="modFile" accept=".json"></label>
-  <label>Preview Image (.png): <input type="file" id="modImage" accept="image/png"></label>
+  <label>Mod Name: <input type="text" id="modName" /></label>
+  <label>Author: <input type="text" id="modAuthor" value="LEMONTECH" /></label>
+  <label>.json File: <input type="file" id="modFile" accept=".json" /></label>
+  <label>Preview Image (.png): <input type="file" id="modImage" accept="image/png" /></label>
   <button onclick="uploadMod()">Add to Workshop</button>
 </div>
 
@@ -118,20 +135,34 @@
 let mods = [];
 
 function saveMods() {
-  localStorage.setItem("lmodMods", JSON.stringify(mods));
+  try {
+    localStorage.setItem("lmodMods", JSON.stringify(mods));
+  } catch(e) {
+    console.error("Error saving mods to localStorage", e);
+  }
 }
 
 function loadMods() {
-  const saved = localStorage.getItem("lmodMods");
-  if (saved) {
-    mods = JSON.parse(saved);
-    mods.forEach(renderMod);
+  try {
+    const saved = localStorage.getItem("lmodMods");
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed)) {
+        mods = parsed;
+        mods.forEach(renderMod);
+      } else {
+        mods = [];
+      }
+    }
+  } catch (e) {
+    console.error("Error loading mods from localStorage", e);
+    mods = [];
   }
 }
 
 function uploadMod() {
-  const name = document.getElementById("modName").value;
-  const author = document.getElementById("modAuthor").value;
+  const name = document.getElementById("modName").value.trim();
+  const author = document.getElementById("modAuthor").value.trim();
   const jsonFile = document.getElementById("modFile").files[0];
   const imageFile = document.getElementById("modImage").files[0];
 
@@ -150,6 +181,7 @@ function uploadMod() {
       const jsonData = ev.target.result;
 
       const modData = {
+        id: Date.now() + Math.random().toString(36).slice(2), // unikalny ID
         name,
         author,
         imageUrl,
@@ -160,6 +192,12 @@ function uploadMod() {
       mods.push(modData);
       saveMods();
       renderMod(modData);
+
+      // Wyczyść formularz
+      document.getElementById("modName").value = "";
+      document.getElementById("modAuthor").value = "LEMONTECH";
+      document.getElementById("modFile").value = "";
+      document.getElementById("modImage").value = "";
     };
 
     readerJSON.readAsText(jsonFile);
@@ -171,8 +209,12 @@ function uploadMod() {
 function renderMod(mod) {
   const container = document.getElementById("workshopList");
 
+  // Sprawdź, czy mod już jest na stronie (np. po reloadzie)
+  if(document.getElementById(mod.id)) return;
+
   const modBox = document.createElement("div");
   modBox.className = "mod-box";
+  modBox.id = mod.id;
 
   const imageDiv = document.createElement("div");
   imageDiv.className = "mod-image";
@@ -189,10 +231,10 @@ function renderMod(mod) {
   authorText.className = "mod-author";
   authorText.textContent = "Author: " + mod.author;
 
-  const btn = document.createElement("button");
-  btn.className = "subscribe-btn";
-  btn.textContent = "Subscribe";
-  btn.onclick = () => {
+  const btnSubscribe = document.createElement("button");
+  btnSubscribe.className = "subscribe-btn";
+  btnSubscribe.textContent = "Subscribe";
+  btnSubscribe.onclick = () => {
     const blob = new Blob([mod.jsonContent], { type: "application/json" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
@@ -200,9 +242,25 @@ function renderMod(mod) {
     a.click();
   };
 
+  const btnDelete = document.createElement("button");
+  btnDelete.className = "delete-btn";
+  btnDelete.textContent = "Delete";
+  btnDelete.onclick = () => {
+    if (confirm(`Delete mod "${mod.name}"?`)) {
+      mods = mods.filter(m => m.id !== mod.id);
+      saveMods();
+      modBox.remove();
+    }
+  };
+
+  const btnGroup = document.createElement("div");
+  btnGroup.className = "btn-group";
+  btnGroup.appendChild(btnSubscribe);
+  btnGroup.appendChild(btnDelete);
+
   infoDiv.appendChild(title);
   infoDiv.appendChild(authorText);
-  infoDiv.appendChild(btn);
+  infoDiv.appendChild(btnGroup);
 
   modBox.appendChild(imageDiv);
   modBox.appendChild(infoDiv);
