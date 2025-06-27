@@ -2,17 +2,17 @@
 <html lang="pl">
 <head>
   <meta charset="UTF-8">
-  <title>Moja Gra - Strona</title>
+  <title>LMod Workshop</title>
   <style>
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      background-color: #1a1a1a;
+      background-color: #1b1b1b;
       color: #fff;
     }
 
     header {
-      background-color: #333;
+      background-color: #111;
       padding: 20px;
       text-align: center;
     }
@@ -30,7 +30,7 @@
       gap: 20px;
     }
 
-    .card {
+    .mod-card {
       background-color: #2a2a2a;
       width: 300px;
       border-radius: 10px;
@@ -39,76 +39,103 @@
       transition: transform 0.2s;
     }
 
-    .card:hover {
+    .mod-card:hover {
       transform: scale(1.05);
     }
 
-    .card img {
+    .mod-card img {
       width: 100%;
       height: 200px;
       object-fit: cover;
     }
 
-    .card-content {
+    .mod-info {
       padding: 15px;
     }
 
-    .card-content h2 {
+    .mod-info h2 {
       margin-top: 0;
       margin-bottom: 10px;
-      font-size: 24px;
+      font-size: 22px;
     }
 
-    .card-content p {
-      margin: 0;
-      font-size: 16px;
+    .mod-info p {
+      margin: 0 0 10px;
+      font-size: 14px;
       color: #ccc;
     }
 
+    .mod-buttons {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .mod-buttons a {
+      display: inline-block;
+      padding: 8px 12px;
+      background-color: #4CAF50;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+      font-size: 14px;
+      transition: background-color 0.2s;
+    }
+
+    .mod-buttons a:hover {
+      background-color: #45a049;
+    }
+
     footer {
-      background-color: #222;
+      background-color: #111;
       text-align: center;
       padding: 15px;
       font-size: 14px;
       color: #aaa;
+      margin-top: 30px;
     }
   </style>
 </head>
 <body>
 
 <header>
-  <h1>Moja Gra</h1>
-  <p>Oficjalna strona gry stworzonej przez LEMONTECH</p>
+  <h1>LMod Workshop</h1>
+  <p>Przeglądaj i pobieraj dodatki do LMod!</p>
 </header>
 
 <div class="container">
-  <div class="card">
-    <img src="https://via.placeholder.com/300x200?text=Zrzut+ekranu+1" alt="Screenshot 1">
-    <div class="card-content">
-      <h2>Tryb Kampanii</h2>
-      <p>Ekscytująca przygoda z unikalnymi poziomami i fabułą!</p>
+
+  <!-- MOD 1 -->
+  <div class="mod-card">
+    <img src="https://via.placeholder.com/300x200?text=Mod+1" alt="Mod 1">
+    <div class="mod-info">
+      <h2>Super Narzędzie</h2>
+      <p>Dodaje laserowy nożyk do LMod! Idealny do przecinania obiektów.</p>
+      <div class="mod-buttons">
+        <a href="mods/super-narzedzie.lmod" download>Pobierz</a>
+        <a href="https://github.com/lemontech/lmod-super-narzedzie" target="_blank">Zobacz</a>
+      </div>
     </div>
   </div>
 
-  <div class="card">
-    <img src="https://via.placeholder.com/300x200?text=Zrzut+ekranu+2" alt="Screenshot 2">
-    <div class="card-content">
-      <h2>Tryb Multiplayer</h2>
-      <p>Graj z przyjaciółmi w dynamicznych bitwach!</p>
+  <!-- MOD 2 -->
+  <div class="mod-card">
+    <img src="https://via.placeholder.com/300x200?text=Mod+2" alt="Mod 2">
+    <div class="mod-info">
+      <h2>Mapa Testowa</h2>
+      <p>Świetna arena do testowania fizyki. Obiekty, rampy i więcej.</p>
+      <div class="mod-buttons">
+        <a href="mods/mapa-testowa.lmod" download>Pobierz</a>
+        <a href="https://github.com/lemontech/lmod-mapa" target="_blank">Zobacz</a>
+      </div>
     </div>
   </div>
 
-  <div class="card">
-    <img src="https://via.placeholder.com/300x200?text=Zrzut+ekranu+3" alt="Screenshot 3">
-    <div class="card-content">
-      <h2>Edytor Poziomów</h2>
-      <p>Twórz własne poziomy i dziel się nimi z innymi!</p>
-    </div>
-  </div>
+  <!-- Dodaj więcej MODÓW tutaj -->
+
 </div>
 
 <footer>
-  &copy; 2025 LEMONTECH. Wszystkie prawa zastrzeżone.
+  &copy; 2025 LEMONTECH. Stworzone dla społeczności LMod.
 </footer>
 
 </body>
